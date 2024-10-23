@@ -2,30 +2,40 @@ import { contentType } from "@std/media-types";
 const BASE_PATH = "./public";
 
 const reqHandler = async (req: Request) => {
-  const filePath = BASE_PATH + new URL(req.url).pathname;
+  const url = new URL(req.url);
+  const filePath = BASE_PATH + url.pathname;
   let fileSize;
 
   console.log(filePath);
 
+  //Errorhandeling
   try {
     fileSize = (await Deno.stat(filePath)).size;
   } catch (e) {
     if (e instanceof Deno.errors.NotFound) {
-      return new Response(null, { status: 404 });
+      return new Response("File not found", { status: 404 });
     }
-    return new Response(null, { status: 500 });
+    return new Response("Internal server error", { status: 500 });
   }
-  const body = (await Deno.readFile(filePath));
+
+  // Read the file from the file system
+  const body = await Deno.readFile(filePath);
+
+  // Extract the extension to determine the content type
+  const ext = filePath.split(".").pop();
+
+  //determin mimeType 
+  const mimeType = contentType(ext || "text/plain") ||"application/octet-stream";
+
+  //construct and send response
   return new Response(body, {
     headers: {
       "content-length": fileSize.toString(),
-      "Content-Type": "text/html",
+      "Content-Type": mimeType,
     },
-  });
-
-  return new Response(file, {
-    headers: { "Content-Type": "text/html" },
   });
 };
 
-Deno.serve({ port: 8080 },reqHandler);
+
+//start server on port 8080
+Deno.serve({ port: 8080 }, reqHandler);
