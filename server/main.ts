@@ -1,4 +1,24 @@
 import { contentType } from "@std/media-types";
+import "jsr:@std/dotenv/load";
+import { connect } from 'https://deno.land/x/redis/mod.ts';
+
+// Load environment variables
+const redisPassword = Deno.env.get("REDIS_PASSWORD")
+
+
+//redis connection
+const redis = await connect({
+  hostname: 'redis.underoaks.tech',
+  port: 6379,
+  password: redisPassword,
+});
+
+//const ok = await redis.set('foo', 'TEST');
+//const foo = await redis.get('foo')
+//
+//console.log(foo);
+
+//Static File serving 
 const BASE_PATH = "./public";
 
 const reqHandler = async (req: Request) => {
@@ -39,3 +59,5 @@ const reqHandler = async (req: Request) => {
 
 //start server on port 8080
 Deno.serve({ port: 8080 }, reqHandler);
+
+
