@@ -15,6 +15,7 @@ Deno.serve({
       // Get the session ID from the URL
       const url = new URL(request.url);
       const sessionId = url.searchParams.get("session");
+      console.log("New connection");
 
       if (!sessionId) {
         socket.close(1008, "Session ID is required");
@@ -22,11 +23,12 @@ Deno.serve({
       }
 
       // Find or create a lobby for the session ID
-      let lobby = lobbyList.find(lobby => lobby.UID === sessionId);
+      let lobby = lobbyList.find((lobby) => lobby.UID === sessionId);
       if (!lobby) {
         // If the lobby doesn't exist, create a new one
         lobby = { clients: [], UID: sessionId };
         lobbyList.push(lobby);
+        console.log("Lobby created with ID: " + lobby.UID);
       }
 
       // If the lobby is full, reject the connection
@@ -38,11 +40,16 @@ Deno.serve({
       // Add the client to the lobby
       lobby.clients.push(socket);
 
+      // Send messages to the client only after the connection is open
+      socket.onopen = () => {
+        socket.send("Joined Lobby " + lobby.UID);
+      };
+
       // Handle incoming messages from the client
       socket.onmessage = (event) => {
         console.log(`Received message: ${event.data}`);
         // Forward the message to other clients in the lobby
-        lobby.clients.forEach(client => {
+        lobby.clients.forEach((client) => {
           if (client !== socket) {
             client.send(event.data);
           }
@@ -52,10 +59,10 @@ Deno.serve({
       // Handle client disconnection
       socket.onclose = () => {
         console.log("Client disconnected");
-        lobby.clients = lobby.clients.filter(client => client !== socket);
+        lobby.clients = lobby.clients.filter((client) => client !== socket);
         // Remove the lobby if no clients are left
         if (lobby.clients.length === 0) {
-          lobbyList = lobbyList.filter(l => l !== lobby);
+          lobbyList = lobbyList.filter((l) => l !== lobby);
         }
       };
 
