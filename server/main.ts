@@ -1,5 +1,5 @@
 interface Lobby {
-  clients: WebSocket[];
+  clients: { socket: WebSocket, clientId: string }[]; // Adding clientId to differentiate between clients
   UID: string;
 }
 
@@ -33,42 +33,50 @@ Deno.serve({
 
       // If the lobby is full, reject the connection
       if (lobby.clients.length >= 2) {
+        console.log(`Lobby is full ID: ${lobby.UID}`);
         socket.close(1008, "Lobby is full");
         return response;
       }
 
+      // Generate a unique client ID (could use remoteAddress, or just a random string)
+      const clientId = Math.random().toString(36).substring(7);
+      console.log(`New client connected with clientId: ${clientId}`);
+
       // Add the client to the lobby
-      lobby.clients.push(socket);
+      lobby.clients.push({ socket, clientId });
 
       // Send messages to the client only after the connection is open
       socket.onopen = () => {
-        socket.send("Joined Lobby " + lobby.UID);
+        console.log(`Client ${clientId} joined lobby ${lobby.UID}`);
+        //socket.send("Joined Lobby " + lobby.UID);
       };
 
       // Handle incoming messages from the client
       socket.onmessage = (event) => {
-        console.log(`Received message: ${event.data}`);
+        console.log(`Received message from client ${clientId}: ${event.data}`);
         // Forward the message to other clients in the lobby
         lobby.clients.forEach((client) => {
-          if (client !== socket) {
-            client.send(event.data);
+          if (client.socket !== socket) {
+            console.log(`Forwarding message from client ${clientId} to client ${client.clientId}`);
+            client.socket.send(event.data);
           }
         });
       };
 
       // Handle client disconnection
       socket.onclose = () => {
-        console.log("Client disconnected");
-        lobby.clients = lobby.clients.filter((client) => client !== socket);
+        console.log(`Client ${clientId} disconnected`);
+        lobby.clients = lobby.clients.filter((client) => client.socket !== socket);
         // Remove the lobby if no clients are left
         if (lobby.clients.length === 0) {
           lobbyList = lobbyList.filter((l) => l !== lobby);
+          console.log(`Lobby ${lobby.UID} removed because all clients disconnected`);
         }
       };
 
       // Handle socket errors
       socket.onerror = (error) => {
-        console.error("WebSocket error:", error);
+        console.error(`WebSocket error for client ${clientId}:`, error);
       };
 
       return response;
