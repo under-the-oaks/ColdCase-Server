@@ -41,6 +41,7 @@ Deno.serve({
           };
 
           socket.send(JSON.stringify(message));
+          lobby = newLobby;
         }else{
           const foundLobby = lobbyList.find((lobby) => lobby.UID === sessionId);
   
@@ -55,17 +56,16 @@ Deno.serve({
             socket.close(1008, "Lobby is full");
             return response;
           }
-  
           //add client to lobby 
-          console.log(`Client ${clientId} joined lobby ${foundLobby.UID}`);
           foundLobby.clients.push({ socket, clientId });
           lobby = foundLobby;
-        }
+        }     
       };
 
       // Handle incoming messages from the client
       socket.onmessage = (event) => {
         console.log(`Received message from client ${clientId}: ${event.data}`);
+        console.log(lobby);
         // Forward the message to other clients in the lobby
         lobby.clients.forEach((client) => {
           if (client.socket !== socket) {
