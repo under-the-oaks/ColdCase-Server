@@ -1,10 +1,21 @@
+/**
+ * Interface representing a Lobby in the WebSocket server.
+ * It contains the list of connected clients and a unique identifier (UID) for the lobby.
+ */
 interface Lobby {
   clients: { socket: WebSocket; clientId: string }[]; // Adding clientId to differentiate between clients
   UID: string;
 }
 
+/**
+ * List to store all active lobbies. Each lobby has a unique UID and a list of connected clients.
+ */
 let lobbyList: Lobby[] = [];
 
+/**
+ * Deno server that listens for WebSocket connections on port 8080.
+ * It handles the creation of lobbies, client connections, and message forwarding between clients.
+ */
 Deno.serve({
   port: 8080,
   handler: async (request) => {
@@ -18,8 +29,8 @@ Deno.serve({
         // Get the session ID from the URL
         const url = new URL(request.url);
         const sessionId = url.searchParams.get("session");
-        console.log("New connection");
-
+        console.log("New connection: " + clientId);
+        
         if (!sessionId) {
           socket.close(1008, "Session ID is required");
           return response;
@@ -59,7 +70,12 @@ Deno.serve({
         }
       };
 
-      // Handle incoming messages from the client
+      /**
+       * Handles incoming messages from a client.
+       * Forwards the received message to all other clients in the same lobby.
+       * 
+       * @param event - The WebSocket message event containing the data from the client.
+       */
       socket.onmessage = (event) => {
         console.log(`Received message from client ${clientId}: ${event.data}`);
         console.log(lobby);
@@ -74,21 +90,31 @@ Deno.serve({
         });
       };
 
-      // Handle client disconnection
+      /**
+       * Handles client disconnections.
+       * Removes the client from the lobby and deletes the lobby if there are no clients left.
+       */
       socket.onclose = () => {
         console.log(`Client ${clientId} disconnected`);
-        //lobby.clients = lobby.clients.filter((client) => client.socket !== socket);
-        //// Remove the lobby if no clients are left
-        //if (lobby.clients.length === 0) {
-        //  lobbyList = lobbyList.filter((l) => l !== lobby);
-        //  console.log(`Lobby ${lobby.UID} removed because all clients disconnected`);
-        //}
+        if(!lobby)return;
+        lobby.clients = lobby.clients.filter((client) => client.socket !== socket);
+        // Remove the lobby if no clients are left
+        if (lobby.clients.length === 0) {
+          lobbyList = lobbyList.filter((l) => l !== lobby);
+          console.log(`Lobby ${lobby.UID} removed because all clients disconnected`);
+        }
       };
 
-      // Handle socket errors
+      /**
+       * Handles any errors that occur with the WebSocket connection.
+       * Logs the error to the console.
+       * 
+       * @param error - The WebSocket error event.
+       */
       socket.onerror = (error) => {
         console.error(`WebSocket error for client ${clientId}:`, error);
         // Remove the client from the lobby's client list
+        console.log(lobby.clients);
         lobby.clients = lobby.clients.filter((client) =>
           client.socket !== socket
         );
