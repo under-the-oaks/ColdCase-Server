@@ -3,7 +3,7 @@
  * It contains the list of connected clients and a unique identifier (UID) for the lobby.
  */
 interface Lobby {
-  clients: { socket: WebSocket, clientId: string }[]; // Adding clientId to differentiate between clients
+  clients: { socket: WebSocket; clientId: string }[]; // Adding clientId to differentiate between clients
   UID: string;
 }
 
@@ -23,20 +23,20 @@ Deno.serve({
     if (request.headers.get("upgrade") === "websocket") {
       const { socket, response } = Deno.upgradeWebSocket(request);
       let clientId = crypto.randomUUID(); //only used for debugging
-      let lobby:Lobby;
+      let lobby: Lobby;
 
       socket.onopen = () => {
         // Get the session ID from the URL
         const url = new URL(request.url);
         const sessionId = url.searchParams.get("session");
-        console.log("New connection");
-  
+        console.log("New connection: " + clientId);
+        
         if (!sessionId) {
           socket.close(1008, "Session ID is required");
           return response;
         }
-  
-        if(sessionId == "new"){
+
+        if (sessionId == "new") {
           const newLobby: Lobby = {
             clients: [{ socket, clientId }],
             UID: crypto.randomUUID(),
@@ -51,24 +51,23 @@ Deno.serve({
 
           socket.send(JSON.stringify(message));
           lobby = newLobby;
-        }else{
+        } else {
           const foundLobby = lobbyList.find((lobby) => lobby.UID === sessionId);
-  
+
           // If the lobby is full or not found, reject the connection
-          if(!foundLobby){
+          if (!foundLobby) {
             console.log(`error finding: ${sessionId}`);
             socket.close(1008, "Lobby doesn't exist");
             return response;
-          }
-          else if (foundLobby.clients.length >= 2) {
+          } else if (foundLobby.clients.length >= 2) {
             console.log(`Lobby is full ID: ${foundLobby.UID}`);
             socket.close(1008, "Lobby is full");
             return response;
           }
-          //add client to lobby 
+          //add client to lobby
           foundLobby.clients.push({ socket, clientId });
           lobby = foundLobby;
-        }     
+        }
       };
 
       /**
@@ -83,7 +82,9 @@ Deno.serve({
         // Forward the message to other clients in the lobby
         lobby.clients.forEach((client) => {
           if (client.socket !== socket) {
-            console.log(`Forwarding message from client ${clientId} to client ${client.clientId}`);
+            console.log(
+              `Forwarding message from client ${clientId} to client ${client.clientId}`,
+            );
             client.socket.send(event.data);
           }
         });
@@ -95,6 +96,7 @@ Deno.serve({
        */
       socket.onclose = () => {
         console.log(`Client ${clientId} disconnected`);
+        if(!lobby)return;
         lobby.clients = lobby.clients.filter((client) => client.socket !== socket);
         // Remove the lobby if no clients are left
         if (lobby.clients.length === 0) {
@@ -111,7 +113,20 @@ Deno.serve({
        */
       socket.onerror = (error) => {
         console.error(`WebSocket error for client ${clientId}:`, error);
-        
+        // Remove the client from the lobby's client list
+        console.log(lobby.clients);
+        lobby.clients = lobby.clients.filter((client) =>
+          client.socket !== socket
+        );
+
+        // Close the socket and notify other clients in the lobby
+        socket.close(1007, "An error occurred. Disconnecting...");
+        if(!removeLobbyIfEmpty(lobby)){
+          lobby.clients.forEach(client => {
+            client.socket.close(1001,"Closing because an error occured")
+          });
+        }
+
       };
 
       return response;
@@ -122,3 +137,20 @@ Deno.serve({
     }
   },
 });
+
+/**
+ * Removes a lobby from the lobby list if all clients have disconnected.
+ * @param {Lobby} lobby - The lobby to be checked and potentially removed.
+ * @returns {boolean} - Returns true if the lobby was removed, otherwise false.
+ */
+function removeLobbyIfEmpty(lobby: Lobby) {
+  if (lobby.clients.length === 0) {
+    // Remove the lobby from the global lobby list
+    lobbyList = lobbyList.filter((l) => l !== lobby);
+    console.log(
+      `Lobby ${lobby.UID} removed because all clients disconnected.`,
+    );
+    return true; // Lobby was removed
+  }
+  return false; // Lobby was not removed
+}
