@@ -132,7 +132,7 @@ Deno.serve({
       return response;
     } else {
       // If the request is a normal HTTP request, serve the client HTML file
-      const file = await Deno.open("./index.html", { read: true });
+      const file = await Deno.open("./public/index.html", { read: true });
       return new Response(file.readable);
     }
   },
