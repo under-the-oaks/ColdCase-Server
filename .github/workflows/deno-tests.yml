@@ -26,4 +26,4 @@ jobs:
         run: deno cache ./server/main.ts
 
       - name: Run tests
-        run: deno test --allow-net --unstable
+        run: deno test --allow-net
