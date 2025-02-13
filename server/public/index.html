@@ -1,24 +1,31 @@
-<!doctype html>
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <script src="https://pixijs.download/release/pixi.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>COLD CASE Game Server</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      color: #0056b3;
+    }
+    code {
+      background-color: #e9ecef;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: "Courier New", Courier, monospace;
+    }
+  </style>
 </head>
-
 <body>
-  <h1>Hello PixiJS</h1>
-  <script type="module">
-    const app = new PIXI.Application();
-    await app.init({ width: 640, height: 360 });
-    document.body.appendChild(app.canvas);
-
-    // load the PNG asynchronously
-    await PIXI.Assets.load('sample.png');
-    let sprite = PIXI.Sprite.from('sample.png');
-
-    app.stage.addChild(sprite);
-  </script>
+  <h1>Welcome to the COLD CASE Game Server</h1>
+  <p>
+    The server is running and ready to accept WebSocket connections.
+  </p>
 </body>
-
 </html>
