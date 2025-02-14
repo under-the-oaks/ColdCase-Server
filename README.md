@@ -1,17 +1,30 @@
+![ColdCase Banner](https://github.com/under-the-oaks/ColdCase-Documentation/blob/31e9dddb233c8022a4ec7349e4e7f3ec5c337de6/Design/Sketches/banner.png)
+
+[![Deno CI](https://github.com/under-the-oaks/ColdCase-Server/actions/workflows/deno-tests.yml/badge.svg)](https://github.com/under-the-oaks/ColdCase-Server/actions/workflows/deno-tests.yml)
+
 # ColdCase
-Wahlprojekt im WS 2024/25 an der Hochschule RheinMain
 
-# Project Description
+A detailed documentation of the specifications, including some tutorials on how to set up the project, can be found [here](https://under-the-oaks.github.io/ColdCase-Documentation/starter-topic.html).
+For the technical Javadocs, go [here](https://under-the-oaks.github.io/ColdCase-Client/index.html).
 
-In this exciting 2.5D adventure game, two players take on the roles of an investigator and a ghost, collaborating to solve a mystery. By utilizing their unique abilities, they can navigate various puzzles and cross the boundaries of their distinct worlds. The investigator operates in the physical realm, while the ghost traverses invisible dimensions, offering crucial insights necessary to tackle the challenges ahead.
+## Prerequesites
 
-Players must work together strategically to uncover clues and reveal the secrets hidden within this captivating and mysterious environment.
+- [Deno 2.0](https://deno.com/)
 
-Contributors:
+## Cloning the Repository
 
-    Yassine Ouhmid - Doku
-    [Contributor Name] - [Role]
-    [Contributor Name] - [Role]
-    [Contributor Name] - [Role]
-    [Contributor Name] - [Role]
-    [Contributor Name] - [Role]
+Clone the GitHub repository to your local machine using Git. Replace the repository URL with the correct one for your project.
+
+```sh
+git clone https://github.com/under-the-oaks/ColdCase-Server
+dd ColdCase-Server
+```
+
+To start the server locally, use the following command:
+
+```sh
+cd server
+deno run --allow-net --allow-read main.ts
+```
+
+Once the server has started, the output should indicate that it is listening on port `8080`.
