@@ -113,8 +113,6 @@ Deno.test("Message Forwarding Test", async () => {
   // Clean up: close the websockets and wait for them to actually close.
   ws1.close();
   ws2.close();
-  await waitForClose(ws1);
-  await waitForClose(ws2);
   abortController.abort();
 });
 
