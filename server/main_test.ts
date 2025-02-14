@@ -111,10 +111,12 @@ Deno.test("Message Forwarding Test", async () => {
   assertEquals(forwardedReply, replyMessage);
 
   // Clean up: close the websockets and wait for them to actually close.
+  const closePromise1 = waitForClose(ws1);
+  const closePromise2 = waitForClose(ws2);
   ws1.close();
   ws2.close();
-  await waitForClose(ws1);
-  await waitForClose(ws2);
+  await closePromise1;
+  await closePromise2;
   abortController.abort();
 });
 
